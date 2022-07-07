@@ -2,7 +2,7 @@ BUILD_DIR := bin
 BINARIES_DIR := cmd
 
 BINARIES := $$(find $(BINARIES_DIR) -maxdepth 1 \( ! -iname "$(BINARIES_DIR)" \) -type d -exec basename {} \;)
-IMPORT_PATH := github.com/dronnix/SearchAccomodation
+IMPORT_PATH := github.com/dronnix/search-accomodation
 
 .PHONY: build
 build: ### Build binaries.
