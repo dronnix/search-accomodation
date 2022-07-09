@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -33,7 +34,7 @@ func (c *csvImporter) ImportNextBatch(size int) ([]geolocation.IPLocation, error
 	for i := 0; i < size; i++ {
 		rec, err := csvReader.Read()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			return nil, fmt.Errorf("failed to read record: %w", err)

@@ -16,6 +16,7 @@ func getExampleFileReader(t *testing.T) io.Reader {
 }
 
 func Test_csvImporter_ImportNextBatch_CheckOnExampleFile(t *testing.T) {
+	t.Parallel()
 	importer := newCsvImporter(getExampleFileReader(t))
 	_, err := importer.ImportNextBatch(1024 * 1024)
 	require.NoError(t, err)
