@@ -80,7 +80,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 			args: args{
 				ip:          "8.8.8.8",
 				countryCode: "UK",
-				countryName: "117-222",
+				countryName: "No",
 				city:        "London",
 				latitude:    "1.23",
 				longitude:   "-0.42",

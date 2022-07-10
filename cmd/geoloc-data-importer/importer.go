@@ -5,53 +5,64 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/dronnix/search-accomodation/domain/geolocation"
 )
 
 type csvImporter struct {
-	reader io.Reader
+	csvReader *csv.Reader
 }
 
-func newCsvImporter(r io.Reader) *csvImporter {
-	return &csvImporter{reader: r}
+func newCSVImporter(r io.Reader) (*csvImporter, error) {
+	csvReader := csv.NewReader(r)
+
+	header, err := csvReader.Read()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read csv header: %w", err)
+	}
+	if len(header) != 7 {
+		return nil, fmt.Errorf("header must contain 7 columns: %v", header)
+	}
+	// TODO: validate header fields.
+	return &csvImporter{csvReader: csvReader}, nil
 }
 
-type csvImportStats struct {
-	TotalRecords    int
-	StoredRecords   int
-	NonValidRecords int
-	TimeSpent       time.Duration
+type ImportStats struct {
+	Imported int
+	NonValid int
 }
 
-func (c *csvImporter) ImportNextBatch(size int) ([]geolocation.IPLocation, error) {
-	csvReader := csv.NewReader(c.reader)
-
-	total, properLen := 0, 0
-	ipToRecord := make(map[string]int)
-
+func (c *csvImporter) ImportNextBatch(size int) ([]geolocation.IPLocation, ImportStats, error) {
+	ipLocations := make([]geolocation.IPLocation, 0, size)
+	stats := ImportStats{}
 	for i := 0; i < size; i++ {
-		rec, err := csvReader.Read()
+		rec, err := c.csvReader.Read()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
+				if i == 0 {
+					return nil, ImportStats{}, io.EOF
+				}
 				break
 			}
-			return nil, fmt.Errorf("failed to read record: %w", err)
+			return nil, ImportStats{}, fmt.Errorf("failed to read record: %w", err)
 		}
-		total++
-		if len(rec) < 7 {
+		if len(rec) != 7 {
+			stats.NonValid++
 			continue
 		}
-		properLen++
-		ipToRecord[rec[0]]++
-	}
-	fmt.Printf("Total records: %d, proper records: %d\n", total, properLen)
-	fmt.Printf("IPs: %d\n", len(ipToRecord))
-	for k, v := range ipToRecord {
-		if v > 1 {
-			fmt.Printf("%s: %d\n", k, v)
+
+		location, err := geolocation.NewIPLocationFromStrings(rec[0], rec[1], rec[2], rec[3], rec[4], rec[5], rec[6])
+		if err != nil {
+			stats.NonValid++
+			continue
 		}
+		ipLocations = append(ipLocations, location)
+		stats.Imported++
 	}
-	return nil, nil
+	return ipLocations, stats, nil
+}
+
+func (s *ImportStats) Add(other ImportStats) {
+	s.Imported += other.Imported
+	s.NonValid += other.NonValid
 }

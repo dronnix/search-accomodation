@@ -38,15 +38,15 @@ func NewIPLocationFromStrings(
 		return IPLocation{}, fmt.Errorf("failed to parse ip address: %s", ip)
 	}
 
-	// TODO: Is better to validate names through dict.
-	if len(countryCode) != 2 || !isLetter(countryCode) {
+	// TODO: Is better to validate names through countries/cities catalog with normalizing.
+	if !validCountryCode(countryCode) {
 		return IPLocation{}, fmt.Errorf("country code must be 2 characters: %s", countryCode)
 	}
-	if len(countryName) < 4 || !isLetter(countryName) {
+	if len(countryName) < 4 {
 		return IPLocation{}, fmt.Errorf("country name must be at least 4 characters: %s", countryName)
 	}
-	if city == "" || !isLetter(city) {
-		return IPLocation{}, fmt.Errorf("city name is invalid: %s", city)
+	if city == "" {
+		return IPLocation{}, fmt.Errorf("city name is empty")
 	}
 
 	coord, err := NewCoordinateFromStrings(latitude, longitude)
@@ -96,6 +96,6 @@ func (c Coordinate) Validate() error {
 	return nil
 }
 
-var isLetter = regexp.MustCompile(`^[a-zA-Z\s]+$`).MatchString
+var validCountryCode = regexp.MustCompile(`^[a-zA-Z]{2}$`).MatchString
 
 const epsilon = 0.000001
