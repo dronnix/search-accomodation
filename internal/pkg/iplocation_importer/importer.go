@@ -1,4 +1,4 @@
-package main
+package iplocation_importer
 
 import (
 	"encoding/csv"
@@ -9,11 +9,14 @@ import (
 	"github.com/dronnix/search-accomodation/domain/geolocation"
 )
 
-type csvImporter struct {
+// CSVImporter imports ip locations from CSV files with following structure:
+// ip_address,country_code,country,city,latitude,longitude,mystery_value
+type CSVImporter struct {
 	csvReader *csv.Reader
 }
 
-func newCSVImporter(r io.Reader) (*csvImporter, error) {
+// NewCSVImporter creates a CSVImporter from reader
+func NewCSVImporter(r io.Reader) (*CSVImporter, error) {
 	csvReader := csv.NewReader(r)
 
 	header, err := csvReader.Read()
@@ -24,27 +27,22 @@ func newCSVImporter(r io.Reader) (*csvImporter, error) {
 		return nil, fmt.Errorf("header must contain 7 columns: %v", header)
 	}
 	// TODO: validate header fields.
-	return &csvImporter{csvReader: csvReader}, nil
+	return &CSVImporter{csvReader: csvReader}, nil
 }
 
-type ImportStats struct {
-	Imported int
-	NonValid int
-}
-
-func (c *csvImporter) ImportNextBatch(size int) ([]geolocation.IPLocation, ImportStats, error) {
+func (c *CSVImporter) ImportNextBatch(size int) ([]geolocation.IPLocation, geolocation.ImportStatistics, error) {
 	ipLocations := make([]geolocation.IPLocation, 0, size)
-	stats := ImportStats{}
+	stats := geolocation.ImportStatistics{}
 	for i := 0; i < size; i++ {
 		rec, err := c.csvReader.Read()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				if i == 0 {
-					return nil, ImportStats{}, io.EOF
+					return nil, geolocation.ImportStatistics{}, io.EOF
 				}
 				break
 			}
-			return nil, ImportStats{}, fmt.Errorf("failed to read record: %w", err)
+			return nil, geolocation.ImportStatistics{}, fmt.Errorf("failed to read record: %w", err)
 		}
 		if len(rec) != 7 {
 			stats.NonValid++
@@ -60,9 +58,4 @@ func (c *csvImporter) ImportNextBatch(size int) ([]geolocation.IPLocation, Impor
 		stats.Imported++
 	}
 	return ipLocations, stats, nil
-}
-
-func (s *ImportStats) Add(other ImportStats) {
-	s.Imported += other.Imported
-	s.NonValid += other.NonValid
 }

@@ -1,4 +1,4 @@
-package main
+package iplocation_importer_test
 
 import (
 	"errors"
@@ -12,10 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dronnix/search-accomodation/domain/geolocation"
+	"github.com/dronnix/search-accomodation/internal/pkg/iplocation_importer"
 )
 
 func getExampleFileReader(t *testing.T) (io.Reader, func()) {
-	const path = "../../data_dump.csv"
+	const path = "../../../data_dump.csv"
 	f, err := os.Open(path)
 	require.NoError(t, err)
 	return f, func() { f.Name() }
@@ -26,9 +27,9 @@ func Test_csvImporter_ImportNextBatch_CheckOnExampleFile(t *testing.T) {
 	t.Parallel()
 	reader, cleanup := getExampleFileReader(t)
 	defer cleanup()
-	importer, err := newCSVImporter(reader)
+	importer, err := iplocation_importer.NewCSVImporter(reader)
 	require.NoError(t, err)
-	totalStats := ImportStats{}
+	totalStats := geolocation.ImportStatistics{}
 	for {
 		records, stats, err := importer.ImportNextBatch(7)
 		if errors.Is(err, io.EOF) {
@@ -49,7 +50,7 @@ func Test_csvImporter_ImportNextBatch(t *testing.T) {
 		csvData         string
 		sizeArg         int
 		wantLocation    []geolocation.IPLocation
-		wantStats       ImportStats
+		wantStats       geolocation.ImportStatistics
 		wantCreationErr bool
 		wantImportErr   bool
 	}{
@@ -58,7 +59,7 @@ func Test_csvImporter_ImportNextBatch(t *testing.T) {
 			csvData:         "ip,country,region,city,lat,lon",
 			sizeArg:         1,
 			wantLocation:    nil,
-			wantStats:       ImportStats{},
+			wantStats:       geolocation.ImportStatistics{},
 			wantCreationErr: true,
 			wantImportErr:   false,
 		},
@@ -76,7 +77,7 @@ func Test_csvImporter_ImportNextBatch(t *testing.T) {
 					MysteryValue: 7823011346,
 				},
 			},
-			wantStats:       ImportStats{Imported: 1, NonValid: 0},
+			wantStats:       geolocation.ImportStatistics{Imported: 1, NonValid: 0},
 			wantCreationErr: false,
 			wantImportErr:   false,
 		},
@@ -94,7 +95,7 @@ func Test_csvImporter_ImportNextBatch(t *testing.T) {
 					MysteryValue: 7823011346,
 				},
 			},
-			wantStats:       ImportStats{Imported: 1, NonValid: 1},
+			wantStats:       geolocation.ImportStatistics{Imported: 1, NonValid: 1},
 			wantCreationErr: false,
 			wantImportErr:   false,
 		},
@@ -105,7 +106,7 @@ func Test_csvImporter_ImportNextBatch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			t.Parallel()
-			importer, err := newCSVImporter(strings.NewReader(tt.csvData))
+			importer, err := iplocation_importer.NewCSVImporter(strings.NewReader(tt.csvData))
 			if tt.wantCreationErr {
 				require.Error(t, err)
 				return

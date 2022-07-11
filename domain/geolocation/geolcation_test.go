@@ -1,9 +1,11 @@
-package geolocation
+package geolocation_test
 
 import (
 	"net"
 	"reflect"
 	"testing"
+
+	"github.com/dronnix/search-accomodation/domain/geolocation"
 )
 
 func TestNewIPLocationFromStrings(t *testing.T) {
@@ -20,7 +22,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    IPLocation
+		want    geolocation.IPLocation
 		wantErr bool
 	}{
 		{
@@ -34,12 +36,12 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "-0.42",
 				mystery:     "42",
 			},
-			want: IPLocation{
+			want: geolocation.IPLocation{
 				IP:          net.IPv4(8, 8, 8, 8),
 				CountryCode: "UK",
 				CountryName: "United Kingdom",
 				City:        "London",
-				Coordinate: Coordinate{
+				Coordinate: geolocation.Coordinate{
 					Lat: 1.23,
 					Lon: -0.42,
 				},
@@ -58,7 +60,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "-0.42",
 				mystery:     "42",
 			},
-			want:    IPLocation{},
+			want:    geolocation.IPLocation{},
 			wantErr: true,
 		},
 		{
@@ -72,7 +74,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "-0.42",
 				mystery:     "42",
 			},
-			want:    IPLocation{},
+			want:    geolocation.IPLocation{},
 			wantErr: true,
 		},
 		{
@@ -86,7 +88,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "-0.42",
 				mystery:     "42",
 			},
-			want:    IPLocation{},
+			want:    geolocation.IPLocation{},
 			wantErr: true,
 		},
 		{
@@ -100,7 +102,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "-0.42",
 				mystery:     "42",
 			},
-			want:    IPLocation{},
+			want:    geolocation.IPLocation{},
 			wantErr: true,
 		},
 		{
@@ -114,7 +116,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "-0.42",
 				mystery:     "42",
 			},
-			want:    IPLocation{},
+			want:    geolocation.IPLocation{},
 			wantErr: true,
 		},
 		{
@@ -128,7 +130,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "",
 				mystery:     "42",
 			},
-			want:    IPLocation{},
+			want:    geolocation.IPLocation{},
 			wantErr: true,
 		},
 		{
@@ -142,7 +144,7 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 				longitude:   "-0.42",
 				mystery:     "real mystery",
 			},
-			want:    IPLocation{},
+			want:    geolocation.IPLocation{},
 			wantErr: true,
 		},
 		// TODO: Add test cases according to coverage map.
@@ -151,8 +153,8 @@ func TestNewIPLocationFromStrings(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := NewIPLocationFromStrings(tt.args.ip, tt.args.countryCode, tt.args.countryName, tt.args.city,
-				tt.args.latitude, tt.args.longitude, tt.args.mystery)
+			got, err := geolocation.NewIPLocationFromStrings(tt.args.ip, tt.args.countryCode, tt.args.countryName,
+				tt.args.city, tt.args.latitude, tt.args.longitude, tt.args.mystery)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewIPLocationFromStrings() error = %v, wantErr %v", err, tt.wantErr)
 				return

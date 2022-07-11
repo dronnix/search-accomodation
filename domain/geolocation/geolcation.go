@@ -17,10 +17,15 @@ type IPLocation struct {
 	MysteryValue uint64
 }
 
-// Coordinate represents WGS84 coordinate.
-type Coordinate struct {
-	Lat float64
-	Lon float64
+// IPLocationImporter - interface for importing IP locations from some source.
+type IPLocationImporter interface {
+	ImportNextBatch(size int) ([]IPLocation, ImportStatistics, error)
+}
+
+// ImportStatistics - provides statistics about import process.
+type ImportStatistics struct {
+	Imported int
+	NonValid int
 }
 
 // NewIPLocationFromStrings - creates IPLocation from strings representation. Useful for CSVs, logs, etc.
@@ -69,33 +74,9 @@ func NewIPLocationFromStrings(
 	}, nil
 }
 
-// NewCoordinateFromStrings - creates Coordinate from strings representation.
-func NewCoordinateFromStrings(sLat, sLon string) (Coordinate, error) {
-	lat, err := strconv.ParseFloat(sLat, 64)
-	if err != nil {
-		return Coordinate{}, fmt.Errorf("failed to parse latitude: %w", err)
-	}
-	lon, err := strconv.ParseFloat(sLon, 64)
-	if err != nil {
-		return Coordinate{}, fmt.Errorf("failed to parse longitude: %w", err)
-	}
-	coord := Coordinate{Lat: lat, Lon: lon}
-	if err = coord.Validate(); err != nil {
-		return Coordinate{}, fmt.Errorf("coordinate is invalid: %w", err)
-	}
-	return coord, nil
-}
-
-func (c Coordinate) Validate() error {
-	if c.Lat < -(90+epsilon) || c.Lat > (90+epsilon) {
-		return fmt.Errorf("latitude is out of bounds [-90;90]: %f", c.Lat)
-	}
-	if c.Lon < -(180+epsilon) || c.Lon > (180+epsilon) {
-		return fmt.Errorf("longitude is out of bounds [-180;180]: %f", c.Lon)
-	}
-	return nil
+func (s *ImportStatistics) Add(other ImportStatistics) {
+	s.Imported += other.Imported
+	s.NonValid += other.NonValid
 }
 
 var validCountryCode = regexp.MustCompile(`^[a-zA-Z]{2}$`).MatchString
-
-const epsilon = 0.000001
