@@ -1,0 +1,12 @@
+version: "3.2"
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - 5432:5432
+    # Use this for debugging: call 'docker logs -f CONTAINER_ID to see all the PostgreSQL logs
+    # command: ["postgres", "-c", "log_statement=all", "-c", "log_lock_waits=true", "-c", "log_checkpoints=true", "-c", "log_line_prefix='%n: %d %p: ", "-c", "log_min_duration_statement=0"]
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test

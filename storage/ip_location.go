@@ -29,12 +29,12 @@ func (s *IPLocationStorage) MigrateUp(ctx context.Context, migrationsDir string)
 	return nil
 }
 
-func (s *IPLocationStorage) FetchLocationsByIP(ip net.IP) ([]geolocation.IPLocation, error) {
+func (s *IPLocationStorage) StoreIPLocations(ctx context.Context, locations []geolocation.IPLocation) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *IPLocationStorage) StoreIPLocations(ctx context.Context, locations []geolocation.IPLocation) error {
+func (s *IPLocationStorage) FetchLocationsByIP(ip net.IP) ([]geolocation.IPLocation, error) {
 	//TODO implement me
 	panic("implement me")
 }
