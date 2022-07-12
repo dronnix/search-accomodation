@@ -85,3 +85,7 @@ issues:
         - dupl
         - goconst
         - funlen
+
+    - path: storage
+      linters:
+        - paralleltest
