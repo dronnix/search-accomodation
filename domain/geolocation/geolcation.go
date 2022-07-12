@@ -1,6 +1,7 @@
 package geolocation
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -20,19 +21,22 @@ type IPLocation struct {
 }
 
 // ImportIPLocations - imports IP locations with providing statistics.
-func ImportIPLocations(importer IPLocationImporter, storer IPLocationStorer) (ImportStatistics, error) {
+func ImportIPLocations(
+	ctx context.Context,
+	importer IPLocationImporter,
+	storer IPLocationStorer) (ImportStatistics, error) {
 	const batchSize = 1024
 	totalStats := ImportStatistics{}
-	// TODO: Mesure time spent on import.
+	// TODO: Measure time spent on import.
 	for {
-		ipLocations, stats, err := importer.ImportNextBatch(batchSize)
+		ipLocations, stats, err := importer.ImportNextBatch(ctx, batchSize)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return stats, nil
 			}
 			return stats, fmt.Errorf("failed to import ip locations: %w", err)
 		}
-		if err = storer.StoreIPLocations(ipLocations); err != nil {
+		if err = storer.StoreIPLocations(ctx, ipLocations); err != nil {
 			return stats, fmt.Errorf("failed to store ip locations: %w", err)
 		}
 		totalStats.Add(stats)
@@ -45,19 +49,19 @@ var ErrIPLocationAmbiguous = errors.New("ip location is ambiguous")
 // PredictIPLocation figures out IP location from IP address, using given fetcher.
 // Returns ErrIPLocationNotFound if IP location is not found.
 // Returns ErrIPLocationAmbiguous if IP more than one location known for the IP.
-func PredictIPLocation(ip net.IP, fetcher IPLocationFetcher) (IPLocation, error) {
+func PredictIPLocation(ctx context.Context, ip net.IP, fetcher IPLocationFetcher) (IPLocation, error) {
 	return IPLocation{}, errors.New("not implemented")
 }
 
 // IPLocationImporter - interface for importing IP locations from some source.
 type IPLocationImporter interface {
 	// ImportNextBatch returns io.EOF when no more data is available.
-	ImportNextBatch(size int) ([]IPLocation, ImportStatistics, error)
+	ImportNextBatch(ctx context.Context, size int) ([]IPLocation, ImportStatistics, error)
 }
 
 // IPLocationStorer - interface for storing IP locations.
 type IPLocationStorer interface {
-	StoreIPLocations([]IPLocation) error
+	StoreIPLocations(ctx context.Context, locations []IPLocation) error
 }
 
 // IPLocationFetcher - interface for fetching locations by IP address.

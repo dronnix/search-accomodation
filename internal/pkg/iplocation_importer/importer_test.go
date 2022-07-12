@@ -1,6 +1,7 @@
 package iplocation_importer_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net"
@@ -31,7 +32,7 @@ func Test_csvImporter_ImportNextBatch_CheckOnExampleFile(t *testing.T) {
 	require.NoError(t, err)
 	totalStats := geolocation.ImportStatistics{}
 	for {
-		records, stats, err := importer.ImportNextBatch(7)
+		records, stats, err := importer.ImportNextBatch(context.Background(), 7)
 		if errors.Is(err, io.EOF) {
 			break
 		}
@@ -113,7 +114,7 @@ func Test_csvImporter_ImportNextBatch(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			loc, stats, err := importer.ImportNextBatch(tt.sizeArg)
+			loc, stats, err := importer.ImportNextBatch(context.Background(), tt.sizeArg)
 			if tt.wantImportErr {
 				require.Error(t, err)
 				return

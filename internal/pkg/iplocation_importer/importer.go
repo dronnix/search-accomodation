@@ -1,6 +1,7 @@
 package iplocation_importer
 
 import (
+	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -30,10 +31,18 @@ func NewCSVImporter(r io.Reader) (*CSVImporter, error) {
 	return &CSVImporter{csvReader: csvReader}, nil
 }
 
-func (c *CSVImporter) ImportNextBatch(size int) ([]geolocation.IPLocation, geolocation.ImportStatistics, error) {
+func (c *CSVImporter) ImportNextBatch(
+	ctx context.Context,
+	size int,
+) ([]geolocation.IPLocation, geolocation.ImportStatistics, error) {
 	ipLocations := make([]geolocation.IPLocation, 0, size)
 	stats := geolocation.ImportStatistics{}
 	for i := 0; i < size; i++ {
+		select {
+		case <-ctx.Done():
+			return ipLocations, stats, ctx.Err() //nolint: wrapcheck
+		default:
+		}
 		rec, err := c.csvReader.Read()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
