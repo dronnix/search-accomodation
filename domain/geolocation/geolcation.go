@@ -25,14 +25,14 @@ func ImportIPLocations(
 	ctx context.Context,
 	importer IPLocationImporter,
 	storer IPLocationStorer) (ImportStatistics, error) {
-	const batchSize = 1024
+	const batchSize = 4096
 	totalStats := ImportStatistics{}
 	// TODO: Measure time spent on import.
 	for {
 		ipLocations, stats, err := importer.ImportNextBatch(ctx, batchSize)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				return stats, nil
+				return totalStats, nil
 			}
 			return stats, fmt.Errorf("failed to import ip locations: %w", err)
 		}
