@@ -58,7 +58,24 @@ func (s *IPLocationStorage) StoreIPLocations(ctx context.Context, locations []ge
 	return nil
 }
 
-func (s *IPLocationStorage) FetchLocationsByIP(ip net.IP) ([]geolocation.IPLocation, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *IPLocationStorage) FetchLocationsByIP(ctx context.Context, ip net.IP) ([]geolocation.IPLocation, error) {
+	// TODO: Use prepared statements, builder if needed.
+	rows, err := s.pool.Query(ctx, "SELECT * FROM geolocation.ip_location WHERE ip_address = $1;", ip)
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch locations by ip: %w", err)
+	}
+	defer rows.Close()
+
+	locations := make([]geolocation.IPLocation, 0, 1)
+	for rows.Next() {
+		loc := geolocation.IPLocation{}
+		// TODO: Use annotated struct.
+		id := 0
+		err = rows.Scan(&id, &loc.IP, &loc.CountryCode, &loc.CountryName, &loc.City, &loc.Lat, &loc.Lon, &loc.MysteryValue)
+		if err != nil {
+			return nil, fmt.Errorf("unable to scan ip location: %w", err)
+		}
+		locations = append(locations, loc)
+	}
+	return locations, nil
 }

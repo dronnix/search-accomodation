@@ -77,7 +77,7 @@ type IPLocationStorer interface {
 type IPLocationFetcher interface {
 	// FetchLocationsByIP returns all possible locations for given IP address.
 	// If no locations are found, returns empty slice.
-	FetchLocationsByIP(ip net.IP) ([]IPLocation, error)
+	FetchLocationsByIP(ctx context.Context, ip net.IP) ([]IPLocation, error)
 }
 
 // ImportStatistics - provides statistics about import process.

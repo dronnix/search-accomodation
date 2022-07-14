@@ -49,11 +49,95 @@ func TestIPLocationStorage_StoreIPLocations(t *testing.T) {
 			MysteryValue: 31337,
 		},
 	}))
-	rows, err := storage.pool.Query(ctx, "SELECT COUNT(*) FROM geolocation.ip_location")
+	rows, err := storage.pool.Query(ctx, "SELECT COUNT(*) FROM geolocation.ip_location;")
 	require.NoError(t, err)
 	defer rows.Close()
 	count := 0
 	require.True(t, rows.Next())
 	require.NoError(t, rows.Scan(&count))
 	assert.Equal(t, 1, count)
+}
+
+func TestIPLocationStorage_FetchLocationsByIP(t *testing.T) {
+	ctx, storage, teardown := setUpDB(t)
+	defer teardown()
+	require.NoError(t, storage.MigrateUp(ctx, migrationsDir))
+	locsToSave := []geolocation.IPLocation{
+		{
+			IP:          net.IP{8, 8, 8, 8},
+			CountryCode: "UK",
+			CountryName: "United Kingdom",
+			City:        "London",
+			Coordinate: geolocation.Coordinate{
+				Lat: 0.42,
+				Lon: -0.23,
+			},
+			MysteryValue: 31337,
+		},
+		{
+			IP:          net.IP{9, 9, 9, 9},
+			CountryCode: "US",
+			CountryName: "United States",
+			City:        "New York",
+			Coordinate: geolocation.Coordinate{
+				Lat: 49.42,
+				Lon: 112.23,
+			},
+			MysteryValue: 31337,
+		},
+	}
+	require.NoError(t, storage.StoreIPLocations(ctx, locsToSave))
+
+	locs, err := storage.FetchLocationsByIP(ctx, net.IP{8, 8, 8, 8})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(locs))
+	assert.Equal(t, locsToSave[0], locs[0])
+}
+
+func TestIPLocationStorage_FetchLocationsMultiIP(t *testing.T) {
+	ctx, storage, teardown := setUpDB(t)
+	defer teardown()
+	require.NoError(t, storage.MigrateUp(ctx, migrationsDir))
+	locsToSave := []geolocation.IPLocation{
+		{
+			IP:          net.IP{8, 8, 8, 8},
+			CountryCode: "UK",
+			CountryName: "United Kingdom",
+			City:        "London",
+			Coordinate: geolocation.Coordinate{
+				Lat: 0.42,
+				Lon: -0.23,
+			},
+			MysteryValue: 31337,
+		},
+		{
+			IP:          net.IP{9, 9, 9, 9},
+			CountryCode: "US",
+			CountryName: "United States",
+			City:        "New York",
+			Coordinate: geolocation.Coordinate{
+				Lat: 49.42,
+				Lon: 112.23,
+			},
+			MysteryValue: 31337,
+		},
+		{
+			IP:          net.IP{8, 8, 8, 8},
+			CountryCode: "GE",
+			CountryName: "Georgia",
+			City:        "Tbilisi",
+			Coordinate: geolocation.Coordinate{
+				Lat: 0.42,
+				Lon: -0.23,
+			},
+			MysteryValue: 31337,
+		},
+	}
+	require.NoError(t, storage.StoreIPLocations(ctx, locsToSave))
+
+	locs, err := storage.FetchLocationsByIP(ctx, net.IP{8, 8, 8, 8})
+	require.NoError(t, err)
+	require.Equal(t, 2, len(locs))
+	assert.Equal(t, locsToSave[0], locs[0])
+	assert.Equal(t, locsToSave[2], locs[1])
 }
