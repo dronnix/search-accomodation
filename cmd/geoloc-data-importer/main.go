@@ -26,7 +26,7 @@ func main() {
 		panic(err)
 	}
 	storer := storage.NewIPLocationStorage(pool)
-	if err := storer.MigrateUp(ctx, "storage/migrations/iplocation"); err != nil {
+	if err = storer.MigrateUp(ctx, "storage/migrations/iplocation"); err != nil {
 		panic(err)
 	}
 	stats, err := geolocation.ImportIPLocations(ctx, importer, storer)

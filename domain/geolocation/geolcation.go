@@ -1,7 +1,10 @@
 package geolocation
 
 import (
+	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"io"
@@ -27,6 +30,7 @@ func ImportIPLocations(
 	storer IPLocationStorer) (ImportStatistics, error) {
 	const batchSize = 4096
 	totalStats := ImportStatistics{}
+	depup := make(ipLocationsDeduplicator)
 	// TODO: Measure time spent on import.
 	for {
 		ipLocations, stats, err := importer.ImportNextBatch(ctx, batchSize)
@@ -36,6 +40,11 @@ func ImportIPLocations(
 			}
 			return stats, fmt.Errorf("failed to import ip locations: %w", err)
 		}
+
+		var dups int
+		ipLocations, dups = depup.deduplicate(ipLocations)
+		stats.ApplyDuplicates(dups)
+
 		if err = storer.StoreIPLocations(ctx, ipLocations); err != nil {
 			return stats, fmt.Errorf("failed to store ip locations: %w", err)
 		}
@@ -73,8 +82,9 @@ type IPLocationFetcher interface {
 
 // ImportStatistics - provides statistics about import process.
 type ImportStatistics struct {
-	Imported int
-	NonValid int
+	Imported   int
+	NonValid   int
+	Duplicated int
 }
 
 // NewIPLocationFromStrings - creates IPLocation from strings representation. Useful for CSVs, logs, etc.
@@ -123,9 +133,36 @@ func NewIPLocationFromStrings(
 	}, nil
 }
 
+func (l *IPLocation) MD5() [md5.Size]byte {
+	var b bytes.Buffer
+	_ = gob.NewEncoder(&b).Encode(*l)
+	return md5.Sum(b.Bytes())
+}
+
 func (s *ImportStatistics) Add(other ImportStatistics) {
 	s.Imported += other.Imported
 	s.NonValid += other.NonValid
+	s.Duplicated += other.Duplicated
+}
+
+func (s *ImportStatistics) ApplyDuplicates(dups int) {
+	s.Duplicated += dups
+	s.Imported -= dups
 }
 
 var validCountryCode = regexp.MustCompile(`^[a-zA-Z]{2}$`).MatchString
+
+type ipLocationsDeduplicator map[[md5.Size]byte]bool
+
+func (d *ipLocationsDeduplicator) deduplicate(locations []IPLocation) (result []IPLocation, duplicated int) {
+	for i := 0; i < len(locations); i++ {
+		if _, ok := (*d)[locations[i].MD5()]; ok {
+			locations[i] = locations[len(locations)-1]
+			locations = locations[:len(locations)-1]
+			duplicated++
+			continue
+		}
+		(*d)[locations[i].MD5()] = true
+	}
+	return locations, duplicated
+}
