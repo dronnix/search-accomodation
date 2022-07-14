@@ -16,3 +16,5 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int32(2), ver)
 }
+
+// TODO: Add tests for negative cases.
