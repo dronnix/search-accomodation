@@ -1,0 +1,78 @@
+openapi: 3.0.0
+info:
+  title: Awesome company Geolocation API
+  description: API for geolocation / iplocation
+  version: 1.0.0
+  contact:
+    name:  andrew.luzin
+    email: andrew.luzin@gmail.com
+
+paths:
+  /v1/iplocaion:
+    get:
+      summary: Get prediction of IP-address location.
+      description: Get prediction of IP-address location.
+      tags: [ "iplocation" ]
+      parameters:
+        #        TODO: Add API-key parameter
+        - name: ip
+          required: true
+          description: IP-address to locate.
+          example: "8.8.8.8"
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: Location of IP-address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ipLocation'
+        204:
+          description: No location found for IP-address.
+        400:
+          description: Malformed request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        503:
+          description: Service temporarily unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+components:
+  schemas:
+
+    error:
+      type: object
+      required: [ "errorDetails" ]
+      properties:
+        errorDetails:
+          type: string
+          example: "IP address is not valid."
+
+    ipLocation:
+      type: object
+      required: [ "country_code", "country", "city", "latitude", "longitude" ]
+      properties:
+        country_code:
+          type: string
+          example: "US"
+        country:
+          type: string
+          example: "United States"
+        city:
+          type: string
+          example: "New York"
+        latitude:
+          type: number
+          example: 40.7128
+          x-go-type: float64
+        longitude:
+          type: number
+          example: -74.0059
+          x-go-type: float64
