@@ -17,8 +17,8 @@ type IpLocation struct {
 	Longitude   float64 `json:"longitude"`
 }
 
-// GetV1IplocaionParams defines parameters for GetV1Iplocaion.
-type GetV1IplocaionParams struct {
+// GetV1IplocationParams defines parameters for GetV1Iplocation.
+type GetV1IplocationParams struct {
 	// IP-address to locate.
 	Ip string `json:"ip"`
 }

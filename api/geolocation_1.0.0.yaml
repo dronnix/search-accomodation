@@ -8,7 +8,7 @@ info:
     email: andrew.luzin@gmail.com
 
 paths:
-  /v1/iplocaion:
+  /v1/iplocation:
     get:
       summary: Get prediction of IP-address location.
       description: Get prediction of IP-address location.

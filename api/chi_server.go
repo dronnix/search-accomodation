@@ -14,8 +14,8 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get prediction of IP-address location.
-	// (GET /v1/iplocaion)
-	GetV1Iplocaion(w http.ResponseWriter, r *http.Request, params GetV1IplocaionParams)
+	// (GET /v1/iplocation)
+	GetV1Iplocation(w http.ResponseWriter, r *http.Request, params GetV1IplocationParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -27,14 +27,14 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.HandlerFunc) http.HandlerFunc
 
-// GetV1Iplocaion operation middleware
-func (siw *ServerInterfaceWrapper) GetV1Iplocaion(w http.ResponseWriter, r *http.Request) {
+// GetV1Iplocation operation middleware
+func (siw *ServerInterfaceWrapper) GetV1Iplocation(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetV1IplocaionParams
+	var params GetV1IplocationParams
 
 	// ------------- Required query parameter "ip" -------------
 	if paramValue := r.URL.Query().Get("ip"); paramValue != "" {
@@ -51,7 +51,7 @@ func (siw *ServerInterfaceWrapper) GetV1Iplocaion(w http.ResponseWriter, r *http
 	}
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetV1Iplocaion(w, r, params)
+		siw.Handler.GetV1Iplocation(w, r, params)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -175,7 +175,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/v1/iplocaion", wrapper.GetV1Iplocaion)
+		r.Get(options.BaseURL+"/v1/iplocation", wrapper.GetV1Iplocation)
 	})
 
 	return r
