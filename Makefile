@@ -32,3 +32,8 @@ lint: ### Run golangci-lint. Install it using `make install-tools`.
 .PHONY: install-tools
 install-tools: ### Install go develop/test tools.
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.43.0
+
+.PHONY: generate-api
+generate-api: ### Generate API structures and servers by swagger spec.
+	oapi-codegen -package=api -generate=types -o api/types.go api/geolocation_1.0.0.yaml
+	oapi-codegen -package=api -generate chi-server -o api/chi_server.go api/geolocation_1.0.0.yaml
