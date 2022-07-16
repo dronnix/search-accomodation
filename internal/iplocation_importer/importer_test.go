@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dronnix/search-accomodation/domain/geolocation"
-	"github.com/dronnix/search-accomodation/internal/pkg/iplocation_importer"
+	"github.com/dronnix/search-accomodation/internal/iplocation_importer"
 )
 
 func getExampleFileReader(t *testing.T) (io.Reader, func()) {
-	const path = "../../../data_dump.csv"
+	const path = "../../data_dump.csv"
 	f, err := os.Open(path)
 	require.NoError(t, err)
 	return f, func() { f.Name() }

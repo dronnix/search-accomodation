@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/dronnix/search-accomodation/domain/geolocation"
-	"github.com/dronnix/search-accomodation/internal/pkg/iplocation_importer"
+	"github.com/dronnix/search-accomodation/internal/iplocation_importer"
 	"github.com/dronnix/search-accomodation/storage"
 )
 

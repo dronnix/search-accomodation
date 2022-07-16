@@ -2,39 +2,50 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net"
 	"net/http"
 
 	"github.com/dronnix/search-accomodation/api"
+	"github.com/dronnix/search-accomodation/domain/geolocation"
 )
 
-type server struct {
+type ipLocationServer struct {
+	fetcher geolocation.IPLocationFetcher
 }
 
-func (s *server) GetV1Iplocation(w http.ResponseWriter, r *http.Request, params api.GetV1IplocationParams) {
+func newIpLocationServer(fetcher geolocation.IPLocationFetcher) *ipLocationServer {
+	return &ipLocationServer{fetcher: fetcher}
+}
+
+func (s *ipLocationServer) GetV1Iplocation(w http.ResponseWriter, r *http.Request, params api.GetV1IplocationParams) {
 	ip := net.ParseIP(params.Ip)
 	if ip == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		body, err := json.Marshal(&api.Error{
-			ErrorDetails: fmt.Sprintf("Invalid IP address: %s", params.Ip),
-		})
-		if err != nil {
-			panic(err) // will be handled by recovery middleware.
-		}
-		w.Write(body)
+		s.sendResponse(http.StatusBadRequest, w, api.Error{ErrorDetails: "Invalid IP address"})
 		return
 	}
 
-	body, err := json.Marshal(&api.IpLocation{
-		City:        "Tbilisi",
-		Country:     "Georgia",
-		CountryCode: "GE",
-		Latitude:    23.3,
-		Longitude:   42.2,
-	})
+	location, err := geolocation.PredictIPLocation(r.Context(), ip, s.fetcher)
 	if err != nil {
-		panic(err) // will be handled by recovery middleware.
+		if errors.Is(err, geolocation.ErrIPLocationNotFound) || errors.Is(err, geolocation.ErrIPLocationAmbiguous) {
+			s.sendResponse(http.StatusNoContent, w, nil)
+		} else {
+			// TODO: Log error, don't expose it to the user.
+			s.sendResponse(http.StatusServiceUnavailable, w, api.Error{ErrorDetails: err.Error()})
+		}
+		return
 	}
-	w.Write(body)
+
+	s.sendResponse(http.StatusOK, w, location)
+}
+
+func (s *ipLocationServer) sendResponse(code int, w http.ResponseWriter, data interface{}) {
+	w.WriteHeader(code)
+	if data != nil {
+		body, err := json.Marshal(data)
+		if err != nil {
+			panic(err) // Exceptional situation - response structure must be marshalable.
+		}
+		_, _ = w.Write(body) // TODO:Log error.
+	}
 }
