@@ -14,12 +14,21 @@ TEST_SELECTOR := $(if $(sel), -run $(sel))
 DIR_SELECTOR := $(if $(dir),"./$(dir)","./...")
 FAIL_FAST := $(if $(ff), -failfast)
 
-PHONY: unit-test
-unit-test:
+PHONY: start-testing ## Create test environment.
+start-testing:
+	docker-compose -f deployment/docker-compose/test.yaml up -d
+
+PHONY: stop-testing ## Clean up test environment.
+stop-testing:
+	docker-compose -f deployment/docker-compose/test.yaml down
+
+PHONY: test
+test:
 	go test $(FAIL_FAST) -v -race -mod=vendor -coverprofile coverage.out $(DIR_SELECTOR) $(TEST_SELECTOR)
 	go tool cover -func coverage.out
 	go tool cover -html coverage.out -o coverage.html
 	rm coverage.out
+
 
 PHONY: bench
 bench:
