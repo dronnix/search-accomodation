@@ -37,3 +37,16 @@ install-tools: ### Install go develop/test tools.
 generate-api: ### Generate API structures and servers by swagger spec.
 	oapi-codegen -package=api -generate=types -o api/types.go api/geolocation_1.0.0.yaml
 	oapi-codegen -package=api -generate chi-server -o api/chi_server.go api/geolocation_1.0.0.yaml
+
+.PHONY: docker-build
+docker-build: ### Build docker images.
+	bash ./deployment/docker/update-iploc-server.sh
+	bash ./deployment/docker/update-iploc-data-importer.sh
+
+.PHONY: compose-run
+compose-run: docker-build ### Run apps in docker-compose.
+	docker-compose -f deployment/docker-compose/run.yaml up
+
+.PHONY: compose-clean
+compose-clean:
+	docker-compose -f deployment/docker-compose/run.yaml rm -fs

@@ -20,11 +20,6 @@ func main() {
 	opts := &options{}
 	flags.Parse(opts)
 
-	// TODO: Remove it!
-	opts.PostgresDB = "test"
-	opts.PostgresUser = "test"
-	opts.PostgresPass = "test"
-
 	importer, err := setupImporter(opts.PathToCSV)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not setup importer: %v\n", err)
