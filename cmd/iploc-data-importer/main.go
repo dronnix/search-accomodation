@@ -6,32 +6,70 @@ import (
 	"os"
 
 	"github.com/dronnix/search-accomodation/domain/geolocation"
+	"github.com/dronnix/search-accomodation/internal/flags"
 	"github.com/dronnix/search-accomodation/internal/iplocation_importer"
 	"github.com/dronnix/search-accomodation/storage"
 )
 
+type options struct {
+	PathToCSV string `long:"path-to-csv" default:"data_dump.csv" env:"PATH_TO_CSV"`
+	*flags.Postgres
+}
+
 func main() {
-	f, err := os.Open("data_dump.csv")
+	opts := &options{}
+	flags.Parse(opts)
+
+	// TODO: Remove it!
+	opts.PostgresDB = "test"
+	opts.PostgresUser = "test"
+	opts.PostgresPass = "test"
+
+	importer, err := setupImporter(opts.PathToCSV)
 	if err != nil {
-		panic(err)
-	}
-	importer, err := iplocation_importer.NewCSVImporter(f)
-	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "could not setup importer: %v\n", err)
+		return // TODO: set exit code
 	}
 
-	ctx := context.Background()
-	pool, err := storage.CreateConnectionPool(ctx, "postgres://test:test@localhost:5432/test")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	storage, err := setupStorage(ctx, opts.Postgres)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "could not setup storage: %v\n", err)
+		return // TODO: set exit code
 	}
-	storer := storage.NewIPLocationStorage(pool)
-	if err = storer.MigrateUp(ctx, "storage/migrations/iplocation"); err != nil {
-		panic(err)
-	}
-	stats, err := geolocation.ImportIPLocations(ctx, importer, storer)
+
+	stats, err := geolocation.ImportIPLocations(ctx, importer, storage)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "could not import IP locations: %v\n", err)
+		return // TODO: set exit code
 	}
-	fmt.Printf("%+v\n", stats)
+
+	fmt.Printf("Time spent(sec): %d\n", int(stats.TimeSpent.Seconds()))
+	fmt.Printf("Total records found: %d\n", stats.Total())
+	fmt.Printf("Non-valid records: %d\n", stats.NonValid)
+	fmt.Printf("Duplicated records: %d\n", stats.Duplicated)
+	fmt.Printf("Imported records: %d\n", stats.Imported)
+}
+
+func setupImporter(pathToCSV string) (*iplocation_importer.CSVImporter, error) {
+	f, err := os.Open(pathToCSV)
+	if err != nil {
+		return nil, fmt.Errorf("could not open file: %w", err)
+	}
+	return iplocation_importer.NewCSVImporter(f) //nolint:wrapcheck
+}
+
+func setupStorage(ctx context.Context, opts *flags.Postgres) (*storage.IPLocationStorage, error) {
+	pool, err := storage.CreateConnectionPool(ctx, opts.PostgresConnectionString())
+	if err != nil {
+		return nil, fmt.Errorf("could not create connection pool: %w", err)
+	}
+	s := storage.NewIPLocationStorage(pool)
+	const migrationsPath = "storage/migrations/iplocation" // TODO: move to config
+	if err := s.MigrateUp(ctx, migrationsPath); err != nil {
+		return nil, fmt.Errorf("could not migrate up: %w", err)
+	}
+	return s, nil
 }

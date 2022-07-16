@@ -18,7 +18,7 @@ func TestPostgres_ConnectionString(t *testing.T) {
 				PostgresPass: "pass",
 				PostgresDB:   "radar",
 			},
-			want: "postgres://user:pass@localhost:5432/radar?sslmode=disable",
+			want: "postgres://user:pass@localhost:5432/radar",
 		},
 		{
 			name: "special symbols",
@@ -29,7 +29,7 @@ func TestPostgres_ConnectionString(t *testing.T) {
 				PostgresPass: "p@$$word!",
 				PostgresDB:   "radar",
 			},
-			want: "postgres://user:p%40%24%24word%21@localhost:5432/radar?sslmode=disable",
+			want: "postgres://user:p%40%24%24word%21@localhost:5432/radar",
 		},
 	}
 

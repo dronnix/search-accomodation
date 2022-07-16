@@ -36,7 +36,13 @@ func (s *ipLocationServer) GetV1Iplocation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	s.sendResponse(http.StatusOK, w, location)
+	s.sendResponse(http.StatusOK, w, api.IpLocation{
+		City:        location.City,
+		Country:     location.CountryName,
+		CountryCode: location.CountryCode,
+		Latitude:    location.Lat,
+		Longitude:   location.Lon,
+	})
 }
 
 func (s *ipLocationServer) sendResponse(code int, w http.ResponseWriter, data interface{}) {

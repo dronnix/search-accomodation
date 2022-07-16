@@ -11,6 +11,7 @@ import (
 	"net"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 // IPLocation - IP address was observed in some location.Can be obtained from CSV or other sources.
@@ -29,17 +30,19 @@ func ImportIPLocations(
 	ctx context.Context,
 	importer IPLocationImporter,
 	storer IPLocationStorer) (ImportStatistics, error) {
-	const batchSize = 4096
+	const batchSize = 65536
 	totalStats := ImportStatistics{}
 	depup := make(ipLocationsDeduplicator)
-	// TODO: Measure time spent on import.
+	start := time.Now()
+
 	for {
 		ipLocations, stats, err := importer.ImportNextBatch(ctx, batchSize)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
+				totalStats.TimeSpent = time.Since(start)
 				return totalStats, nil
 			}
-			return stats, fmt.Errorf("failed to import ip locations: %w", err)
+			return ImportStatistics{}, fmt.Errorf("failed to import ip locations: %w", err)
 		}
 
 		var dups int
@@ -47,7 +50,7 @@ func ImportIPLocations(
 		stats.ApplyDuplicates(dups)
 
 		if err = storer.StoreIPLocations(ctx, ipLocations); err != nil {
-			return stats, fmt.Errorf("failed to store ip locations: %w", err)
+			return ImportStatistics{}, fmt.Errorf("failed to store ip locations: %w", err)
 		}
 		totalStats.Add(stats)
 	}
@@ -97,6 +100,7 @@ type ImportStatistics struct {
 	Imported   int
 	NonValid   int
 	Duplicated int
+	TimeSpent  time.Duration
 }
 
 // NewIPLocationFromStrings - creates IPLocation from strings representation. Useful for CSVs, logs, etc.
@@ -160,6 +164,10 @@ func (s *ImportStatistics) Add(other ImportStatistics) {
 func (s *ImportStatistics) ApplyDuplicates(dups int) {
 	s.Duplicated += dups
 	s.Imported -= dups
+}
+
+func (s *ImportStatistics) Total() int {
+	return s.Imported + s.NonValid + s.Duplicated
 }
 
 var validCountryCode = regexp.MustCompile(`^[a-zA-Z]{2}$`).MatchString
