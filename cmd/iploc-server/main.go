@@ -24,11 +24,6 @@ func main() {
 	opts := &options{}
 	flags.Parse(opts)
 
-	// TODO: Remove it!
-	opts.PostgresDB = "test"
-	opts.PostgresUser = "test"
-	opts.PostgresPass = "test"
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
