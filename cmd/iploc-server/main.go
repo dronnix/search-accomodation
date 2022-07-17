@@ -12,6 +12,7 @@ import (
 
 	"github.com/dronnix/search-accomodation/api"
 	"github.com/dronnix/search-accomodation/internal/flags"
+	"github.com/dronnix/search-accomodation/internal/iploc_api"
 	"github.com/dronnix/search-accomodation/storage"
 )
 
@@ -33,7 +34,7 @@ func main() {
 		return // TODO: set exit code
 	}
 
-	ipLocSrv := newIpLocationServer(storage)
+	ipLocSrv := iploc_api.NewIpLocationServer(storage)
 	httpServer := setupHTTPServer(opts, ipLocSrv)
 
 	if err := httpServer.ListenAndServe(); err != nil {
@@ -55,7 +56,7 @@ func setupStorage(ctx context.Context, opts *flags.Postgres) (*storage.IPLocatio
 	return s, nil
 }
 
-func setupHTTPServer(opts *options, ipLocSrv *ipLocationServer) *http.Server {
+func setupHTTPServer(opts *options, ipLocSrv *iploc_api.IPLocationServer) *http.Server {
 	router := chi.NewRouter()
 	router.Use(
 		middleware.Logger,

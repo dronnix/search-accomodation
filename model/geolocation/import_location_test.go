@@ -66,12 +66,13 @@ func TestImportIPLocations(t *testing.T) {
 	importer.On("ImportNextBatch", mock.Anything, mock.AnythingOfType("int")).Return(
 		[]geolocation.IPLocation{}, geolocation.ImportStatistics{}, io.EOF).Once()
 
-	storer.On("StoreIPLocations", mock.Anything, locations).Return(nil).Once()
+	dedupLocs := []geolocation.IPLocation{locations[0], locations[2]}
+	storer.On("StoreIPLocations", mock.Anything, dedupLocs).Return(nil).Once()
 
 	stats, err := geolocation.ImportIPLocations(context.Background(), importer, storer)
 	require.NoError(t, err)
-	assert.Equal(t, 3, stats.Imported)
-	assert.Equal(t, 0, stats.Duplicated)
+	assert.Equal(t, 2, stats.Imported)
+	assert.Equal(t, 1, stats.Duplicated)
 	assert.Equal(t, 0, stats.NonValid)
 
 	importer.AssertExpectations(t)
@@ -115,15 +116,15 @@ var locations = []geolocation.IPLocation{
 		MysteryValue: 42,
 	},
 	{
-		IP:          net.IPv4(1, 2, 3, 5),
-		CountryCode: "FR",
-		CountryName: "France",
-		City:        "Paris",
+		IP:          net.IPv4(1, 2, 3, 4),
+		CountryCode: "UK",
+		CountryName: "United Kingdom",
+		City:        "London",
 		Coordinate: geolocation.Coordinate{
 			Lat: 51.5,
 			Lon: -0.1,
 		},
-		MysteryValue: 23,
+		MysteryValue: 42,
 	},
 	{
 		IP:          net.IPv4(1, 2, 3, 6),

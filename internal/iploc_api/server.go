@@ -1,4 +1,4 @@
-package main
+package iploc_api
 
 import (
 	"encoding/json"
@@ -10,15 +10,15 @@ import (
 	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
-type ipLocationServer struct {
+type IPLocationServer struct {
 	fetcher geolocation.IPLocationFetcher
 }
 
-func newIpLocationServer(fetcher geolocation.IPLocationFetcher) *ipLocationServer {
-	return &ipLocationServer{fetcher: fetcher}
+func NewIpLocationServer(fetcher geolocation.IPLocationFetcher) *IPLocationServer {
+	return &IPLocationServer{fetcher: fetcher}
 }
 
-func (s *ipLocationServer) GetV1Iplocation(w http.ResponseWriter, r *http.Request, params api.GetV1IplocationParams) {
+func (s *IPLocationServer) GetV1Iplocation(w http.ResponseWriter, r *http.Request, params api.GetV1IplocationParams) {
 	ip := net.ParseIP(params.Ip)
 	if ip == nil {
 		s.sendResponse(http.StatusBadRequest, w, api.Error{ErrorDetails: "Invalid IP address"})
@@ -45,7 +45,7 @@ func (s *ipLocationServer) GetV1Iplocation(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-func (s *ipLocationServer) sendResponse(code int, w http.ResponseWriter, data interface{}) {
+func (s *IPLocationServer) sendResponse(code int, w http.ResponseWriter, data interface{}) {
 	w.WriteHeader(code)
 	if data != nil {
 		body, err := json.Marshal(data)
