@@ -21,7 +21,14 @@ type options struct {
 	*flags.Postgres
 }
 
+const exitCodeOK = 0
+const exitCodeError = 1
+
 func main() {
+	os.Exit(_main())
+}
+
+func _main() int {
 	opts := &options{}
 	flags.Parse(opts)
 
@@ -31,7 +38,7 @@ func main() {
 	storage, err := setupStorage(ctx, opts.Postgres)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not setup storage: %v\n", err)
-		return // TODO: set exit code
+		return exitCodeError
 	}
 
 	ipLocSrv := iploc_api.NewIpLocationServer(storage)
@@ -41,6 +48,7 @@ func main() {
 		panic("ListenAndServe: " + err.Error()) // TODO (ALu): replace with logger
 	}
 	// TODO: Add signal handler
+	return exitCodeOK
 }
 
 func setupStorage(ctx context.Context, opts *flags.Postgres) (*storage.IPLocationStorage, error) {

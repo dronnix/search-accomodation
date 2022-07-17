@@ -16,14 +16,21 @@ type options struct {
 	*flags.Postgres
 }
 
+const exitCodeOK = 0
+const exitCodeError = 1
+
 func main() {
+	os.Exit(_main())
+}
+
+func _main() int {
 	opts := &options{}
 	flags.Parse(opts)
 
 	importer, err := setupImporter(opts.PathToCSV)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not setup importer: %v\n", err)
-		return // TODO: set exit code
+		return exitCodeError
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -32,13 +39,13 @@ func main() {
 	storage, err := setupStorage(ctx, opts.Postgres)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not setup storage: %v\n", err)
-		return // TODO: set exit code
+		return exitCodeError
 	}
 
 	stats, err := geolocation.ImportIPLocations(ctx, importer, storage)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not import IP locations: %v\n", err)
-		return // TODO: set exit code
+		return exitCodeError
 	}
 
 	fmt.Printf("Time spent(sec): %d\n", int(stats.TimeSpent.Seconds()))
@@ -46,6 +53,8 @@ func main() {
 	fmt.Printf("Non-valid records: %d\n", stats.NonValid)
 	fmt.Printf("Duplicated records: %d\n", stats.Duplicated)
 	fmt.Printf("Imported records: %d\n", stats.Imported)
+
+	return exitCodeOK
 }
 
 func setupImporter(pathToCSV string) (*iplocation_importer.CSVImporter, error) {
