@@ -78,6 +78,8 @@ func TestImportIPLocations(t *testing.T) {
 	storer.AssertExpectations(t)
 }
 
+// TODO: Add more cases for ImportIPLocations.
+
 type importerMock struct {
 	mock.Mock
 }
