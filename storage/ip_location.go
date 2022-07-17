@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
-	"github.com/dronnix/search-accomodation/domain/geolocation"
+	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
 type IPLocationStorage struct {

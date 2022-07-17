@@ -15,5 +15,6 @@
 # vendor/
 
 /coverage.html
+/TODO.md
 /.idea/
 /bin/

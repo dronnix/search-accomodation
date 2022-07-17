@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/dronnix/search-accomodation/api"
-	"github.com/dronnix/search-accomodation/domain/geolocation"
+	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
 type ipLocationServer struct {

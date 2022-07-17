@@ -3,7 +3,7 @@ package geolocation_test
 import (
 	"testing"
 
-	"github.com/dronnix/search-accomodation/domain/geolocation"
+	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
 func TestCoordinates_Validate(t *testing.T) {

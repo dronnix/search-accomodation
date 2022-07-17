@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dronnix/search-accomodation/domain/geolocation"
 	"github.com/dronnix/search-accomodation/internal/flags"
 	"github.com/dronnix/search-accomodation/internal/iplocation_importer"
+	"github.com/dronnix/search-accomodation/model/geolocation"
 	"github.com/dronnix/search-accomodation/storage"
 )
 

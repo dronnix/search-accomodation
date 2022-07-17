@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/dronnix/search-accomodation/domain/geolocation"
+	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
 func TestNewIPLocationFromStrings(t *testing.T) {

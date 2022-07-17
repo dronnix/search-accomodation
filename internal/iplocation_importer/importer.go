@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/dronnix/search-accomodation/domain/geolocation"
+	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
 // CSVImporter imports ip locations from CSV files with following structure:
