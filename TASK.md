@@ -1,4 +1,4 @@
-# FindHotel Coding Challenge
+# AwesomeCompany Coding Challenge
 
 ## Geolocation Service
 

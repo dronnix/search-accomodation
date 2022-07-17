@@ -1,6 +1,6 @@
 version: "3.2"
 services:
-  postgres:
+  postgres_test:
     image: postgres:14
     ports:
       - 5432:5432
