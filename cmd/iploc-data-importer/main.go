@@ -23,7 +23,7 @@ func main() {
 	os.Exit(_main())
 }
 
-func _main() int {
+func _main() int { // separate function to avoid "defer" in main
 	opts := &options{}
 	flags.Parse(opts)
 
@@ -57,6 +57,7 @@ func _main() int {
 	return exitCodeOK
 }
 
+// setupImporter creates an importer from the given CSV file and checks the header.
 func setupImporter(pathToCSV string) (*iplocation_importer.CSVImporter, error) {
 	f, err := os.Open(pathToCSV)
 	if err != nil {
@@ -65,6 +66,7 @@ func setupImporter(pathToCSV string) (*iplocation_importer.CSVImporter, error) {
 	return iplocation_importer.NewCSVImporter(f) //nolint:wrapcheck
 }
 
+// setupStorage connects to the database and performs any necessary migrations.
 func setupStorage(ctx context.Context, opts *flags.Postgres) (*storage.IPLocationStorage, error) {
 	pool, err := storage.CreateConnectionPool(ctx, opts.PostgresConnectionString())
 	if err != nil {

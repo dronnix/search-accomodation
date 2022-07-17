@@ -10,6 +10,7 @@ import (
 
 const migrationsTableName = "migration"
 
+// Migrate runs migrations from migrationsDir.
 func Migrate(
 	ctx context.Context,
 	pool *pgxpool.Pool,

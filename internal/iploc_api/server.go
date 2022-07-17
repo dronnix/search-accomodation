@@ -10,6 +10,7 @@ import (
 	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
+// IPLocationServer is handler-implementation for auto-generated API stub.
 type IPLocationServer struct {
 	fetcher geolocation.IPLocationFetcher
 }
@@ -18,6 +19,7 @@ func NewIpLocationServer(fetcher geolocation.IPLocationFetcher) *IPLocationServe
 	return &IPLocationServer{fetcher: fetcher}
 }
 
+// GetV1Iplocation is handler-implementation for auto-generated API stub.
 func (s *IPLocationServer) GetV1Iplocation(w http.ResponseWriter, r *http.Request, params api.GetV1IplocationParams) {
 	ip := net.ParseIP(params.Ip)
 	if ip == nil {

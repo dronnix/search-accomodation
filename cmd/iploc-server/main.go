@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -28,7 +31,7 @@ func main() {
 	os.Exit(_main())
 }
 
-func _main() int {
+func _main() int { // separate function to avoid "defer" in main
 	opts := &options{}
 	flags.Parse(opts)
 
@@ -44,13 +47,18 @@ func _main() int {
 	ipLocSrv := iploc_api.NewIpLocationServer(storage)
 	httpServer := setupHTTPServer(opts, ipLocSrv)
 
-	if err := httpServer.ListenAndServe(); err != nil {
-		panic("ListenAndServe: " + err.Error()) // TODO (ALu): replace with logger
+	setupSignalHandler(ctx, cancel, httpServer) // Gracefully shutdown on SIGINT/SIGTERM.
+
+	if err = httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		fmt.Fprintf(os.Stderr, "server error: %v\n", err)
+		return exitCodeError
 	}
-	// TODO: Add signal handler
+
+	fmt.Fprintln(os.Stdout, "server stopped")
 	return exitCodeOK
 }
 
+// setupStorage connects to the database and performs any necessary migrations.
 func setupStorage(ctx context.Context, opts *flags.Postgres) (*storage.IPLocationStorage, error) {
 	pool, err := storage.CreateConnectionPool(ctx, opts.PostgresConnectionString())
 	if err != nil {
@@ -64,6 +72,7 @@ func setupStorage(ctx context.Context, opts *flags.Postgres) (*storage.IPLocatio
 	return s, nil
 }
 
+// setupHTTPServer creates and configures the HTTP server and router.
 func setupHTTPServer(opts *options, ipLocSrv *iploc_api.IPLocationServer) *http.Server {
 	router := chi.NewRouter()
 	router.Use(
@@ -84,4 +93,17 @@ func setupHTTPServer(opts *options, ipLocSrv *iploc_api.IPLocationServer) *http.
 		IdleTimeout:    time.Minute,
 		MaxHeaderBytes: 4096,
 	}
+}
+
+func setupSignalHandler(ctx context.Context, cancel func(), apiSrv *http.Server) {
+	quitChan := make(chan os.Signal, 1)
+	signal.Ignore(syscall.SIGHUP, syscall.SIGPIPE)
+	signal.Notify(quitChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-quitChan
+		if err := apiSrv.Shutdown(ctx); err != nil {
+			fmt.Fprintf(os.Stderr, "unable to gracefully shutdown api server")
+		}
+		cancel()
+	}()
 }

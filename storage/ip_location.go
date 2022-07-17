@@ -11,6 +11,7 @@ import (
 	"github.com/dronnix/search-accomodation/model/geolocation"
 )
 
+// IPLocationStorage is implementation of IPLocationFetcher/IPLocationStorer on top of PostgreSQL.
 type IPLocationStorage struct {
 	pool *pgxpool.Pool
 }
@@ -22,6 +23,7 @@ func NewIPLocationStorage(pool *pgxpool.Pool) *IPLocationStorage {
 	return &IPLocationStorage{pool: pool}
 }
 
+// MigrateUp migrates up database schema.
 func (s *IPLocationStorage) MigrateUp(ctx context.Context, migrationsDir string) error {
 	version, err := Migrate(ctx, s.pool, migrationsDir)
 	if err != nil {
@@ -30,6 +32,7 @@ func (s *IPLocationStorage) MigrateUp(ctx context.Context, migrationsDir string)
 	return nil
 }
 
+// StoreIPLocations batch using COPY FROM PostgreSQL.
 func (s *IPLocationStorage) StoreIPLocations(ctx context.Context, locations []geolocation.IPLocation) error {
 	table := []string{"geolocation", "ip_location"}
 	columns := []string{"ip_address", "country_code", "country_name", "city", "latitude", "longitude",
@@ -58,6 +61,7 @@ func (s *IPLocationStorage) StoreIPLocations(ctx context.Context, locations []ge
 	return nil
 }
 
+// FetchLocationsByIP - see geolocation.IPLocationFetcher interface specification.
 func (s *IPLocationStorage) FetchLocationsByIP(ctx context.Context, ip net.IP) ([]geolocation.IPLocation, error) {
 	// TODO: Use prepared statements, builder if needed.
 	rows, err := s.pool.Query(ctx, "SELECT * FROM geolocation.ip_location WHERE ip_address = $1;", ip)

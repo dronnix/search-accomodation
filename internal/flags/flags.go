@@ -8,6 +8,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
+// Postgres configuration.
 type Postgres struct {
 	PostgresHost string `long:"postgres-host" description:"host with PG" default:"localhost" env:"POSTGRES_HOST"`
 	PostgresPort string `long:"postgres-port" description:"port where PG is listening" default:"5432" env:"POSTGRES_PORT"`
@@ -16,6 +17,7 @@ type Postgres struct {
 	PostgresPass string `long:"postgres-pass" description:"PG password" default:"NA" env:"POSTGRES_PASS"`
 }
 
+// Parse command line arguments to annotated struct.
 func Parse(cfg interface{}) {
 	parser := flags.NewParser(cfg, flags.Default)
 	if _, err := parser.Parse(); err != nil {

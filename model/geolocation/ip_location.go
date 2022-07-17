@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-// IPLocation - IP address was observed in some location.Can be obtained from CSV or other sources.
+// IPLocation - IP address that was observed in some location.Can be obtained from CSV or other sources.
 type IPLocation struct {
 	IP          net.IP
 	CountryCode string
