@@ -41,6 +41,7 @@ lint: ### Run golangci-lint. Install it using `make install-tools`.
 .PHONY: install-tools
 install-tools: ### Install go develop/test tools.
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.43.0
+		go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.9.1
 
 .PHONY: generate-api
 generate-api: ### Generate API structures and servers by swagger spec.
