@@ -2,6 +2,7 @@ package iploc_api
 
 import (
 	"context"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -26,6 +27,9 @@ func Test_ipLocationServer_GetV1Iplocation_OK(t *testing.T) {
 	res := w.Result()
 	defer res.Body.Close()
 	require.Equal(t, http.StatusOK, res.StatusCode)
+	body, _ := ioutil.ReadAll(res.Body)
+	const expected = "{\"city\":\"London\",\"country\":\"United Kingdom\",\"country_code\":\"UK\",\"latitude\":51.5,\"longitude\":-0.1}"
+	require.Equal(t, expected, string(body))
 }
 
 func Test_ipLocationServer_GetV1Iplocation_Ambiguous(t *testing.T) {

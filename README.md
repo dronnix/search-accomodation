@@ -6,7 +6,7 @@ The full task description can be found at [TASK.md](TASK.md).
 ## Quickstart
 Requirements: *make* utility, *docker-engine* and *docker-compose* installed.
 To run, use: `make compose-run`. It downloads/builds necessary images, and runs it all together. PostgreSQL, CSV import
-utility and the API will be started. You can find import statistics and the API logs in docker-compose output:
+utility (processing the given file) and the API will be started. You can find import statistics and the API logs in docker-compose output:
 ```
 postgres_1        | 2022-07-17 08:27:44.505 UTC [1] LOG:  database system is ready to accept connections
 iploc-importer_1  | Time spent(sec): 20
