@@ -1,0 +1,42 @@
+version: "3.2"
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - 5432:5432
+    # Use this for debugging: call 'docker logs -f CONTAINER_ID to see all the PostgreSQL logs
+    # command: ["postgres", "-c", "log_statement=all", "-c", "log_lock_waits=true", "-c", "log_checkpoints=true", "-c", "log_line_prefix='%n: %d %p: ", "-c", "log_min_duration_statement=0"]
+    environment:
+      POSTGRES_DB: geolocation
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d geolocation" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  iploc-server:
+    image: iploc-server:1.0.0
+    ports:
+      - 8080:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: geolocation
+      POSTGRES_USER: user
+      POSTGRES_PASS: password
+
+  iploc-importer:
+    image: iploc-data-importer:1.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PATH_TO_CSV: data/data_dump.csv
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: geolocation
+      POSTGRES_USER: user
+      POSTGRES_PASS: password
